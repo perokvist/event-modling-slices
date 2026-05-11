@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DaprEventStore/DaprEventStore.csproj" />
+    <Project Path="src/SampleApp/SampleApp.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/DaprEventStore.IntegrationTests/DaprEventStore.IntegrationTests.csproj" />
+    <Project Path="test/SampleApp.Tests/SampleApp.Tests.csproj" Id="8e9e295f-0520-41dd-945f-562cad34c6fb" />
+  </Folder>
+  <Project Path="dapr-lab.AppHost/dapr-lab.AppHost.csproj" Id="ef4427aa-0974-4bec-92d8-dc5bc3a79f26" />
+  <Project Path="dapr-lab.ServiceDefaults/dapr-lab.ServiceDefaults.csproj" />
+</Solution>
