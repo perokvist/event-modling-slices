@@ -1,7 +1,7 @@
-using SampleApp.Modules.Sample;
-using SampleApp.Modules.Sample.StartGame;
+using SampleApp.Modules.Game;
+using SampleApp.Modules.Game.StartGame;
 
-namespace SampleApp.Tests.Modules.Sample.StartGame;
+namespace SampleApp.Tests.Modules.Game.StartGame;
 
 public class StateChangeTests
 {

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using SampleApp.Modules.Game;
 
-namespace SampleApp.Modules.Sample.GetGame;
+namespace SampleApp.Modules.Game.GetGame;
 
 public static class GetGameHandler
 {

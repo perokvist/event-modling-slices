@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using SampleApp.Modules.Sample.GetGame;
+using SampleApp.Modules.Game;
+using SampleApp.Modules.Game.GetGame;
 
-namespace SampleApp.Modules.Sample.StartGame;
+namespace SampleApp.Modules.Game.StartGame;
 
 public static class StartGameFeature
 {

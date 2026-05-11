@@ -1,11 +1,11 @@
-using SampleApp.Modules.Sample;
-using SampleApp.Modules.Sample.StartGame;
 using System.Net.Http.Json;
 using Xunit.Abstractions;
 using System.Reactive.Linq;
 using System.Reactive.Threading.Tasks;
+using SampleApp.Modules.Game.StartGame;
+using SampleApp.Modules.Game;
 
-namespace SampleApp.Tests.Modules.Sample.StartGame;
+namespace SampleApp.Tests.Modules.Game.StartGame;
 
 public class StartGameApiTests(Fixture fixture, ITestOutputHelper outputHelper) : IClassFixture<Fixture>
 {

@@ -1,6 +1,6 @@
 using DaprEventStore;
 using SampleApp.Modules;
-using SampleApp.Modules.Sample;
+using SampleApp.Modules.Game;
 using SampleApp.Modules.Sample.StartGame;
 
 var builder = WebApplication.CreateBuilder(args);

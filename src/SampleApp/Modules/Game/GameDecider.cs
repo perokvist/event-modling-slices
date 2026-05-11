@@ -1,6 +1,6 @@
-using SampleApp.Modules.Sample.StartGame;
+using SampleApp.Modules.Game.StartGame;
 
-namespace SampleApp.Modules.Sample;
+namespace SampleApp.Modules.Game;
 
 public record GameDecider() : Decider<Command, Event, GameState>
     (InitialState: new GameState(),

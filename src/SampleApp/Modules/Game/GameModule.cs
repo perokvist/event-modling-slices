@@ -1,7 +1,7 @@
 using DaprEventStore;
-using SampleApp.Modules.Sample.StartGame;
+using SampleApp.Modules.Game.StartGame;
 
-namespace SampleApp.Modules.Sample;
+namespace SampleApp.Modules.Game;
 
 public class GameModule(IEventStore store, Func<IntegrationEvent, Task> pub) : IModule
 {
