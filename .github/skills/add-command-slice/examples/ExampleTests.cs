@@ -80,3 +80,54 @@ public class StateChangeTests
         Assert.True(state.IsCreated);
     }
 }
+
+// =============================================================================
+// Example: API integration test for the CreateOrder command slice
+// =============================================================================
+// File: test/App.Tests/Modules/Order/CreateOrder/CreateOrderApiTests.cs
+//
+// The Fixture wires InMemoryEventStore with InProcessEndpointPublisher.
+// After AppendToStreamAsync, each event is POSTed as a CloudEvent to the
+// domain-events endpoint, which calls IModule.When() on all registered modules.
+// TestModule captures those events via Subject<Event> for assertion.
+//
+// Use the (client, events) overload of Test() to subscribe before triggering
+// the command so no events are missed.
+//
+// Note: the feature generates a server-side ID (cmd with { Id = Guid.NewGuid() }),
+// so assert on domain fields (CustomerName, Product) — not on OrderId.
+// =============================================================================
+
+using System.Net.Http.Json;
+using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
+using Xunit.Abstractions;
+
+public class CreateOrderApiTests(Fixture fixture, ITestOutputHelper outputHelper) : IClassFixture<Fixture>
+{
+    [Fact]
+    public Task CreateOrder_publishes_OrderCreated() =>
+        fixture
+        .WithLogging(outputHelper.WriteLine)
+        .Test(async (client, events) =>
+        {
+            // Arrange — subscribe before triggering the command
+            var capture = events
+                .Timeout(TimeSpan.FromMilliseconds(2500))
+                .OfType<OrderCreated>()
+                .FirstAsync()
+                .ToTask();
+
+            // Act
+            var response = await client.PostAsJsonAsync(
+                "/orders",
+                new CreateOrderCommand(Guid.NewGuid(), "Alice", "Widget", 5));
+
+            response.EnsureSuccessStatusCode();
+
+            // Assert — event delivered through domain-events endpoint to IModule.When
+            var received = await capture;
+            Assert.Equal("Alice", received.CustomerName);
+            Assert.Equal("Widget", received.Product);
+        });
+}

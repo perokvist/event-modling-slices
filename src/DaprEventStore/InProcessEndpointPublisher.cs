@@ -90,7 +90,8 @@ public sealed class InProcessEndpointPublisher
                     Source = new Uri("urn:inprocess"),
                 };
 
-                var context = new DefaultHttpContext { RequestServices = serviceProvider };
+                using var scope = serviceProvider.CreateScope();
+                var context = new DefaultHttpContext { RequestServices = scope.ServiceProvider };
                 context.Request.Method = HttpMethods.Post;
                 context.Request.ContentType = "application/json";
                 context.Request.Body = new MemoryStream(JsonSerializer.SerializeToUtf8Bytes(cloudEvent, JsonOptions));

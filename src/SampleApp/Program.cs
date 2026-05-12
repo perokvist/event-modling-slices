@@ -1,7 +1,6 @@
 using DaprEventStore;
 using SampleApp.Modules;
 using SampleApp.Modules.Game;
-using SampleApp.Modules.Sample.StartGame;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +21,7 @@ builder.Services.AddModule<GameModule>();
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
+app.MapDomainEvents();
 
 app.UseModuleEndpoints<GameModule>(a => a
         .MapGroup("games")

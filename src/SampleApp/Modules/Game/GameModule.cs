@@ -1,4 +1,5 @@
 using DaprEventStore;
+using SampleApp.Modules.Game.MakeMove;
 using SampleApp.Modules.Game.StartGame;
 
 namespace SampleApp.Modules.Game;
@@ -9,6 +10,7 @@ public class GameModule(IEventStore store, Func<IntegrationEvent, Task> pub) : I
         => command switch
         {
             StartGameCommand cmd => store.Execute(cmd, new GameDecider()).ToResultAsync(),
+            MakeMoveCommand cmd => store.Execute(cmd, new GameDecider()).ToResultAsync(),
             _ => throw new NotImplementedException()
         };
 
@@ -17,8 +19,5 @@ public class GameModule(IEventStore store, Func<IntegrationEvent, Task> pub) : I
         throw new NotImplementedException();
     }
 
-    public Task When(Event @event)
-    {
-        throw new NotImplementedException();
-    }
+    public Task When(Event @event) => Task.CompletedTask;
 }

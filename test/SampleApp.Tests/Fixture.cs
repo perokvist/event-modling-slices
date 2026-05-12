@@ -23,7 +23,11 @@ public class Fixture : WebApplicationFactory<global::Program>
                 .AddProvider(new DelegateLoggerProvider(s => log(s))))
         .ConfigureTestServices(services => services
             .AddSingleton<Func<IntegrationEvent, Task>>(Module.When)
-            .AddSingleton<IEventStore, InMemoryEventStore>()
+            .AddSingleton<IEventStore>(sp =>
+            {
+                var publisher = InProcessEndpointPublisher.ForTopic(sp, "pubsub", "domain-events");
+                return new InMemoryEventStore(publisher.PublishAsync);
+            })
             .AddModule(Module)
         );
 

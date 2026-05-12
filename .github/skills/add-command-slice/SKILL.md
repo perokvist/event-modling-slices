@@ -19,6 +19,36 @@ A Command Slice implements the pattern: **Trigger → Command → Event(s)** wit
 > For background theory on command slices and how AI should assist, see
 > [Event Modeling AI Skills for Slices](../../../docs/research/event-modeling-ai-skills-for-slices.md).
 
+## Scope Boundary — What This Skill Does NOT Cover
+
+This skill implements **only** the Command Slice: `Trigger → Command → Event(s)`.
+
+Event Modeling defines three slice types. The other two are **out of scope** here:
+
+| Slice type | Pattern | Skill |
+|---|---|---|
+| **Command (this skill)** | `Trigger → Command → Event(s)` | `add-command-slice` |
+| View (Read Model) | `Event(s) → View` | `add-view-slice` |
+| Automation | `Event(s) → View → Trigger → Command → Event(s)` | *(future)* |
+
+### `IModule.When` and `IModule.Query<T>`
+
+These two methods belong to the **View Slice**, not the Command Slice:
+
+- `When(Event @event)` — projection entry point; routes events to read-model updaters
+- `Query<T>(Query<T> query)` — serves the projected read model to callers
+
+**`When` must return `Task.CompletedTask` — not `throw`** when adding a command slice.
+The `domain-events` subscription endpoint calls `When()` on every registered module after
+each event is stored. A module that has no view slice must silently ignore events it does not
+handle; throwing would break pub/sub delivery for all modules.
+
+**`Query` may be left as `throw new NotImplementedException()`** until a view slice is added.
+Only implement `When` fully when adding a corresponding view slice via the `add-view-slice` skill.
+
+> A command slice that returns `Task.CompletedTask` from `When` and throws from `Query` is
+> complete and correct. The read model is a separate concern addressed by a separate slice.
+
 ## Prerequisites
 
 Before starting, gather these inputs from the user:
@@ -215,8 +245,7 @@ public class {Module}Module(IEventStore store, Func<IntegrationEvent, Task> pub)
     public ValueTask<T?> Query<T>(Query<T> query) where T : ReadModel?
         => throw new NotImplementedException();
 
-    public Task When(Event @event)
-        => throw new NotImplementedException();
+    public Task When(Event @event) => Task.CompletedTask;
 }
 ```
 
@@ -288,32 +317,61 @@ The Given-When-Then test is the **specification** of the command slice. It direc
 
 > See example: [ExampleTests.cs](examples/ExampleTests.cs)
 
-### Step 10 — Write the API integration test (optional)
+### Step 10 — Write the API integration test
 
 **File:** `test/{App}.Tests/Modules/{Module}/{CommandName}/{CommandName}ApiTests.cs`
 
+The API test exercises the full end-to-end slice via `TestServer`. The `Fixture` wires
+`InMemoryEventStore` with `InProcessEndpointPublisher`, which posts each stored event as a
+CloudEvent to the `domain-events` endpoint. That endpoint calls `When()` on all registered
+`IModule` instances, including `TestModule`, which publishes to an `IObservable<Event>`.
+
+Use the `(client, events)` overload of `Test()` to subscribe to that observable and await
+the expected event:
+
 ```csharp
+using System.Net.Http.Json;
+using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using {App}.Modules.{Module};
 using {App}.Modules.{Module}.{CommandName};
-using System.Net.Http.Json;
+using Xunit.Abstractions;
 
 namespace {App}.Tests.Modules.{Module}.{CommandName};
 
-public class {CommandName}ApiTests(Fixture fixture) : IClassFixture<Fixture>
+public class {CommandName}ApiTests(Fixture fixture, ITestOutputHelper outputHelper) : IClassFixture<Fixture>
 {
     [Fact]
-    public Task {CommandName}_via_api() =>
+    public Task {CommandName}_publishes_{EventName}() =>
         fixture
-        .Test(async client =>
+        .WithLogging(outputHelper.WriteLine)
+        .Test(async (client, events) =>
         {
+            // Arrange — subscribe before triggering the command
+            var capture = events
+                .Timeout(TimeSpan.FromMilliseconds(2500))
+                .OfType<{EventName}>()
+                .FirstAsync()
+                .ToTask();
+
+            // Act
             var response = await client.PostAsJsonAsync(
                 "/{route}",
                 new {CommandName}Command(Guid.NewGuid(), {command args}));
 
             response.EnsureSuccessStatusCode();
+
+            // Assert — event delivered through domain-events endpoint to IModule.When
+            var received = await capture;
+            Assert.Equal({expected value}, received.{Field});
         });
 }
 ```
+
+> **Note on the server-generated ID:** The feature generates a new `Guid` server-side
+> (`var id = Guid.NewGuid(); cmd with { Id = id }`), so the command's `Id` is replaced.
+> Assert on domain-specific fields (e.g. `Name`, `CustomerName`) that come directly from the
+> command body, not on `Id` / aggregate ID.
 
 ## Files Checklist
 
