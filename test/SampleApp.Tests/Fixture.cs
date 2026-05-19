@@ -12,7 +12,7 @@ namespace SampleApp.Tests;
 public class Fixture : WebApplicationFactory<global::Program>
 {
     private Action<string> log = s => { };
-    private TestModule Module { get; set; } = new(new());
+    protected TestModule Module { get; } = new(new());
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
      => builder
@@ -46,13 +46,14 @@ public class Fixture : WebApplicationFactory<global::Program>
         return this;
     }
 
-    public async Task<Fixture> WithHistory<TState>(
-       Decider<Command, Event, TState> decider,
-       params Event[] history)
-       where TState : State
-    {
-        var store = base.Services.GetRequiredService<IEventStore>();
-        var r = decider.RouteEvents(history);
+     public async Task<Fixture> WithHistory<TState>(
+        Decider<Command, Event, TState> decider,
+        params Event[] history)
+        where TState : State
+     {
+         using var scope = base.Services.CreateScope();
+         var store = scope.ServiceProvider.GetRequiredService<IEventStore>();
+         var r = decider.RouteEvents(history);
 
         if (r.Count() == 1)
         {
