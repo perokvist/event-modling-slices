@@ -125,6 +125,19 @@ public static partial class ApplicationService
         await store.AppendToStreamsAsync(entries.ToArray());
     }
 
+    public static Task ExecuteStateless<TCommand, TEvent>(
+        this IEventStore store,
+        TCommand command,
+        Func<TCommand, TEvent> gateway,
+        Func<TEvent, Task> publish)
+        where TCommand : Command
+        where TEvent : Event
+    {
+        _ = store;
+        var @event = gateway(command);
+        return publish(@event);
+    }
+
     public static async Task Execute<TState>(
        this DaprClient dapr,
        string eventStateStoreName,

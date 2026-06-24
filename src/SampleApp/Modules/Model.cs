@@ -13,3 +13,8 @@ public record ReadModel();
 public record ViewResponse<TView>(TView? View, Link[] Links) where TView : ReadModel;
 public record PagedResponse<TView>(IEnumerable<ViewResponse<TView>> Items, int Count, int Total, Link[] Links) where TView : ReadModel;
 public record Link(string Href, string Rel, string Method, string? Type = null);
+
+public record Projection<TEvent, TState>(
+    TState InitialState,
+    Func<TState, TEvent, TState> Evolve,
+    Func<TState, bool>? Filter = null);
