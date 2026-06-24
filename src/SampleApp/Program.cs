@@ -1,7 +1,7 @@
 using DaprEventStore;
 using SampleApp.Modules;
 using SampleApp.Modules.Game;
-using SampleApp.Modules.TodoList;
+using SampleApp.Modules.Game.EmailSender;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,12 +18,7 @@ builder.Services.AddSingleton<IEventStore>(sp =>
     }.PartitionAllStream();
 });
 builder.Services.AddModule<GameModule>();
-builder.Services.AddTodoAutomation(options =>
-{
-    options.PublishToPubSub = true;
-    options.TopicName = "todo-work";
-    options.PubSubName = "pubsub";
-});
+builder.Services.AddSingleton<IStateStore, InMemoryStateStore>();
 
 var app = builder.Build();
 
