@@ -1,3 +1,4 @@
+using DaprEventStore;
 using SampleApp.Modules;
 
 namespace SampleApp.Tests.Modules;
@@ -56,6 +57,56 @@ public class TodoAutomationFlowTests
 
         var saved = await stateStore.GetAsync<TestState>("state");
         Assert.Null(saved);
+    }
+
+    [Fact]
+    public async Task ApplyFromStreamAsync_rehydrates_state_and_dispatches_on_trigger()
+    {
+        var store = new InMemoryEventStore();
+        var dispatched = new List<Command>();
+        const string streamName = "state-stream";
+
+        await store.AppendToStreamAsync(
+            streamName,
+            EventData.Create(nameof(NonTriggerEvent), new NonTriggerEvent(Guid.NewGuid(), 2)));
+
+        var state = await TodoAutomationFlow.ApplyFromStreamAsync<TestState, TriggerEvent>(
+            eventStore: store,
+            streamName: streamName,
+            projection: Projection,
+            @event: new TriggerEvent(Guid.NewGuid(), 3),
+            execute: Execute,
+            dispatch: command =>
+            {
+                dispatched.Add(command);
+                return Task.FromResult(Result.Success());
+            });
+
+        Assert.Equal(5, state.Counter);
+        Assert.Single(dispatched);
+        Assert.IsType<TestCommand>(dispatched[0]);
+    }
+
+    [Fact]
+    public async Task ApplyFromStreamAsync_does_not_dispatch_when_execute_returns_null()
+    {
+        var store = new InMemoryEventStore();
+        var dispatched = new List<Command>();
+
+        var state = await TodoAutomationFlow.ApplyFromStreamAsync<TestState, TriggerEvent>(
+            eventStore: store,
+            streamName: "state-stream",
+            projection: Projection,
+            @event: new TriggerEvent(Guid.NewGuid(), -1),
+            execute: Execute,
+            dispatch: command =>
+            {
+                dispatched.Add(command);
+                return Task.FromResult(Result.Success());
+            });
+
+        Assert.Equal(-1, state.Counter);
+        Assert.Empty(dispatched);
     }
 
     private static TestState Evolve(TestState state, Event @event)

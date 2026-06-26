@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Mvc;
 using SampleApp.Modules.Game;
 
 namespace SampleApp.Modules.Game.GetGame;
@@ -6,8 +5,8 @@ namespace SampleApp.Modules.Game.GetGame;
 public static class GetGameHandler
 {
     public static void MapEndpoints(RouteGroupBuilder app)
-     => app.MapGet("{id}", async ([FromBody] GetGameQuery q, GameModule m, LinkGenerator linkGenerator, HttpContext http) =>
-            await m.Query(q) switch
+     => app.MapGet("/{id}", async (Guid id, GameModule m, LinkGenerator linkGenerator, HttpContext http) =>
+            await m.Query(new GetGameQuery(id)) switch
             {
                 null => Results.NotFound(),
                 var v => Results.Ok(new ViewResponse<GameView>(
@@ -15,7 +14,7 @@ public static class GetGameHandler
                     Links:
                     [
                         new(
-                        Href: linkGenerator.GetUriByName(http, nameof(GetGameQuery), values: new { q.Id })!,
+                        Href: linkGenerator.GetUriByName(http, nameof(GetGameQuery), values: new { id })!,
                         Rel: "self",
                         Method: "GET")
                     ]))
