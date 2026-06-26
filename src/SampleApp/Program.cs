@@ -1,6 +1,7 @@
 using DaprEventStore;
 using SampleApp.Modules;
 using SampleApp.Modules.Game;
+using SampleApp.Modules.Game.GetGame;
 using SampleApp.Modules.Game.EmailSender;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -19,6 +20,7 @@ builder.Services.AddSingleton<IEventStore>(sp =>
 });
 builder.Services.AddModule<GameModule>();
 builder.Services.AddSingleton<IStateStore, InMemoryStateStore>();
+builder.Services.AddSingleton<GameProjection>();
 
 var app = builder.Build();
 

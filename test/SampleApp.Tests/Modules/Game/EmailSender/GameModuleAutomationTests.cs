@@ -2,6 +2,7 @@ using DaprEventStore;
 using SampleApp.Modules;
 using SampleApp.Modules.Game;
 using SampleApp.Modules.Game.EmailSender;
+using SampleApp.Modules.Game.GetGame;
 using SampleApp.Modules.Game.SendGameStartedEmail;
 using SampleApp.Modules.Game.StartGame;
 
@@ -14,7 +15,7 @@ public class GameModuleAutomationTests
     {
         var store = new InMemoryEventStore();
         var stateStore = new InMemoryStateStore();
-        var module = new GameModule(store, stateStore);
+        var module = new GameModule(store, stateStore, new GameProjection());
         var gameId = Guid.NewGuid();
 
         await module.When(new GameStarted(gameId, "Test Game"));
@@ -33,7 +34,7 @@ public class GameModuleAutomationTests
     {
         var store = new InMemoryEventStore();
         var stateStore = new InMemoryStateStore();
-        var module = new GameModule(store, stateStore);
+        var module = new GameModule(store, stateStore, new GameProjection());
         var gameId = Guid.NewGuid();
 
         await module.Dispatch(new SendGameStartedEmailCommand(Guid.NewGuid(), gameId, "Test Game"));
